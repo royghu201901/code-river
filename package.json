@@ -1,0 +1,250 @@
+{
+  "name": "code-river",
+  "displayName": "Code River - 代码评审工具",
+  "description": "一个用于代码评审、标注问题和Git同步的VS Code扩展",
+  "version": "0.0.1",
+  "engines": {
+    "vscode": "^1.99.0"
+  },
+  "categories": [
+    "Other",
+    "SCM Providers"
+  ],
+  "activationEvents": [
+    "onView:code-river.issuesList",
+    "onCommand:code-river.addIssue",
+    "onCommand:code-river.viewIssues",
+    "onCommand:code-river.syncWithGit"
+  ],
+  "main": "./out/extension.js",
+  "contributes": {
+    "commands": [
+      {
+        "command": "code-river.helloWorld",
+        "title": "Hello World"
+      },
+      {
+        "command": "code-river.addIssue",
+        "title": "Add Code Review Issue",
+        "icon": "$(add)"
+      },
+      {
+        "command": "code-river.viewIssues",
+        "title": "查看所有代码评审问题",
+        "icon": "$(list-unordered)"
+      },
+      {
+        "command": "code-river.syncWithGit",
+        "title": "同步代码评审问题到Git",
+        "icon": "$(sync)"
+      },
+      {
+        "command": "code-river.resolveIssue",
+        "title": "标记问题为已解决",
+        "icon": "$(check)"
+      },
+      {
+        "command": "code-river.approveIssue",
+        "title": "同意此评审问题",
+        "icon": "$(thumbsup)"
+      },
+      {
+        "command": "code-river.replyToIssue",
+        "title": "回复此评审问题",
+        "icon": "$(comment)"
+      },
+      {
+        "command": "code-river.deleteIssue",
+        "title": "删除此评审问题",
+        "icon": "$(trash)"
+      },
+      {
+        "command": "code-river.setAdmin",
+        "title": "设置管理员用户",
+        "category": "Code River"
+      },
+      {
+        "command": "code-river.setReviewer",
+        "title": "设置审核者用户",
+        "category": "Code River"
+      },
+      {
+        "command": "code-river.syncMyIssues",
+        "title": "同步",
+        "icon": "$(sync)"
+      },
+      {
+        "command": "code-river.syncReviewIssues",
+        "title": "同步",
+        "icon": "$(sync)"
+      },
+      {
+        "command": "code-river.syncCreatedByMe",
+        "title": "同步",
+        "icon": "$(sync)"
+      },
+      {
+        "command": "code-river.inviteReviewer",
+        "title": "邀请评审者",
+        "icon": "$(person-add)"
+      }
+    ],
+    "menus": {
+      "editor/context": [
+        {
+          "command": "code-river.addIssue",
+          "group": "code-river",
+          "when": "editorTextFocus"
+        }
+      ],
+      "view/title": [
+        {
+          "command": "code-river.syncMyIssues",
+          "when": "view == code-river.myIssues && code-river.myIssues.hasChanges",
+          "group": "navigation"
+        },
+        {
+          "command": "code-river.syncReviewIssues",
+          "when": "view == code-river.reviewIssues && code-river.reviewIssues.hasChanges",
+          "group": "navigation"
+        },
+        {
+          "command": "code-river.syncCreatedByMe",
+          "when": "view == code-river.createdByMe && code-river.createdByMe.hasChanges",
+          "group": "navigation"
+        }
+      ],
+      "view/item/context": [
+        {
+          "command": "code-river.inviteReviewer",
+          "when": "view == code-river.reviewIssues && viewItem == openIssue || view == code-river.createdByMe && viewItem == openIssue",
+          "group": "inline@1"
+        },
+        {
+          "command": "code-river.resolveIssue",
+          "when": "view == code-river.reviewIssues && viewItem == openIssue",
+          "group": "inline@2"
+        },
+        {
+          "command": "code-river.approveIssue",
+          "when": "view == code-river.reviewIssues && (viewItem == openIssue || viewItem == fixedIssue)",
+          "group": "inline@3"
+        },
+        {
+          "command": "code-river.replyToIssue",
+          "when": "viewItem == openIssue || viewItem == fixedIssue || viewItem == approvedIssue || viewItem == wontfixIssue",
+          "group": "inline@4"
+        },
+        {
+          "command": "code-river.deleteIssue",
+          "when": "(view == code-river.reviewIssues || view == code-river.createdByMe && code-river.createdByMe.hasChanges) && (viewItem == openIssue || viewItem == fixedIssue || viewItem == approvedIssue || viewItem == wontfixIssue)",
+          "group": "inline@5"
+        }
+      ]
+    },
+    "viewsContainers": {
+      "activitybar": [
+        {
+          "id": "code-river-container",
+          "title": "代码评审管理",
+          "icon": "resources/code-review.svg"
+        }
+      ]
+    },
+    "views": {
+      "code-river-container": [
+        {
+          "id": "code-river.myIssues",
+          "name": "关于我的"
+        },
+        {
+          "id": "code-river.reviewIssues",
+          "name": "评审审核"
+        },
+        {
+          "id": "code-river.createdByMe",
+          "name": "我创建的"
+        }
+      ]
+    },
+    "configuration": {
+      "title": "Code River",
+      "properties": {
+        "codeRiver.gitIntegration.enabled": {
+          "type": "boolean",
+          "default": true,
+          "description": "启用与Git的集成"
+        },
+        "codeRiver.gitIntegration.syncMethod": {
+          "type": "string",
+          "enum": ["comments", "issues", "both"],
+          "default": "comments",
+          "description": "Git同步方式：作为代码注释、仓库Issues或两者都有"
+        },
+        "codeRiver.issueTemplate": {
+          "type": "string",
+          "default": "问题：{description}\n位置：{file}:{line}\n状态：{status}",
+          "description": "问题描述的模板"
+        },
+        "codeRiver.userName": {
+          "type": "string",
+          "default": "",
+          "description": "您的用户名，用于标识评审问题和回复的作者"
+        },
+        "codeRiver.showOnlyWorkspaceIssues": {
+          "type": "boolean",
+          "default": true,
+          "description": "仅显示当前工作区内的评审问题"
+        },
+        "codeRiver.adminUsers": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "default": [],
+          "description": "具有最高权限的用户名列表"
+        },
+        "codeRiver.reviewers": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "default": [],
+          "description": "被邀请审核评审的参与者用户名列表"
+        }
+      }
+    },
+    "keybindings": [
+      {
+        "command": "code-river.addIssue",
+        "key": "ctrl+shift+i",
+        "mac": "cmd+shift+i",
+        "when": "editorTextFocus"
+      },
+      {
+        "command": "code-river.viewIssues",
+        "key": "ctrl+shift+v",
+        "mac": "cmd+shift+v"
+      }
+    ]
+  },
+  "scripts": {
+    "vscode:prepublish": "yarn run compile",
+    "compile": "tsc -p ./",
+    "watch": "tsc -watch -p ./",
+    "pretest": "yarn run compile && yarn run lint",
+    "lint": "eslint src",
+    "test": "vscode-test"
+  },
+  "devDependencies": {
+    "@types/vscode": "^1.99.0",
+    "@types/mocha": "^10.0.10",
+    "@types/node": "20.x",
+    "@typescript-eslint/eslint-plugin": "^8.28.0",
+    "@typescript-eslint/parser": "^8.28.0",
+    "eslint": "^9.23.0",
+    "typescript": "^5.8.2",
+    "@vscode/test-cli": "^0.0.10",
+    "@vscode/test-electron": "^2.4.1"
+  }
+}
