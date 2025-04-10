@@ -11,10 +11,7 @@
     "SCM Providers"
   ],
   "activationEvents": [
-    "onView:code-river.issuesList",
-    "onCommand:code-river.addIssue",
-    "onCommand:code-river.viewIssues",
-    "onCommand:code-river.syncWithGit"
+    "onView:code-river.issuesList"
   ],
   "main": "./out/extension.js",
   "contributes": {

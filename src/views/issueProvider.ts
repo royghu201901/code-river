@@ -13,7 +13,8 @@ export class ReplyTreeItem extends vscode.TreeItem {
         
         this.description = `${reply.author} - ${new Date(reply.createdAt).toLocaleString()}`;
         this.contextValue = 'reply';
-        this.iconPath = new vscode.ThemeIcon('comment');
+        // 移除图标设置
+        // this.iconPath = new vscode.ThemeIcon('comment');
     }
 }
 
@@ -23,28 +24,37 @@ export class IssueTreeItem extends vscode.TreeItem {
         public readonly issue: CodeReviewIssue,
         public readonly collapsibleState: vscode.TreeItemCollapsibleState
     ) {
-        const label = `${path.basename(issue.filePath)}:${issue.lineNumber + 1}`;
-        super(label, collapsibleState);
+        super(issue.description, collapsibleState);
         
-        this.tooltip = issue.description;
-        this.description = issue.description.length > 50 
-            ? `${issue.description.substring(0, 47)}...` 
-            : issue.description;
+        this.tooltip = `${issue.description} (${issue.status})`;
+        this.description = `${issue.filePath}:${issue.lineNumber}`;
+        this.contextValue = issue.status.toLowerCase() + 'Issue';
         
-        // 确保正确设置 contextValue
-        this.contextValue = issue.status === 'open' ? 'openIssue' : 
-                           issue.status === 'fixed' ? 'fixedIssue' : 
-                           issue.status === 'approved' ? 'approvedIssue' : 'wontfixIssue';
+        // 移除图标设置
+        // this.iconPath = this.getIconForStatus(issue.status);
         
-        // 设置图标
-        this.iconPath = getStatusIcon(issue.status);
-        
-        // 添加命令，使点击时跳转到对应的代码位置
+        // 添加命令，点击时跳转到问题位置
         this.command = {
             command: 'code-river.openIssueLocation',
             title: '打开问题位置',
-            arguments: [this.issue]
+            arguments: [issue]
         };
+    }
+    
+    // 可以保留这个方法，但不再使用它
+    private getIconForStatus(status: string): vscode.ThemeIcon {
+        switch (status) {
+            case 'Open':
+                return new vscode.ThemeIcon('issues');
+            case 'Fixed':
+                return new vscode.ThemeIcon('check');
+            case 'Approved':
+                return new vscode.ThemeIcon('thumbsup');
+            case 'WontFix':
+                return new vscode.ThemeIcon('x');
+            default:
+                return new vscode.ThemeIcon('circle-outline');
+        }
     }
 }
 
